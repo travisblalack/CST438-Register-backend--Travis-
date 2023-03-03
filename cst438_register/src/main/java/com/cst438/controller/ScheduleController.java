@@ -80,6 +80,9 @@ public class ScheduleController {
 		
 		if (student!= null && course!=null && student.getStatusCode()==0) {
 			// TODO check that today's date is not past add deadline for the course.
+			if(student.equals(0)) {
+			System.out.println("ok to register"+student);
+			}
 			Enrollment enrollment = new Enrollment();
 			enrollment.setStudent(student);
 			enrollment.setCourse(course);
