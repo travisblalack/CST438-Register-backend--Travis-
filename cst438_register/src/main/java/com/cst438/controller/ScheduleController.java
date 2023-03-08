@@ -1,10 +1,14 @@
 package com.cst438.controller;
 
+
+
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,10 +16,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
 import com.cst438.domain.Course;
 import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
@@ -41,6 +45,8 @@ public class ScheduleController {
 	
 	@Autowired
 	GradebookService gradebookService;
+
+	private Object name;
 	
 	
 	/*
@@ -63,8 +69,6 @@ public class ScheduleController {
 		}
 	}
 	
-
-	
 	@PostMapping("/schedule")
 	@Transactional
 	public ScheduleDTO.CourseDTO addCourse( @RequestBody ScheduleDTO.CourseDTO courseDTO  ) { 
@@ -80,9 +84,6 @@ public class ScheduleController {
 		
 		if (student!= null && course!=null && student.getStatusCode()==0) {
 			// TODO check that today's date is not past add deadline for the course.
-			if(student.equals(0)) {
-			System.out.println("ok to register"+student);
-			}
 			Enrollment enrollment = new Enrollment();
 			enrollment.setStudent(student);
 			enrollment.setCourse(course);
@@ -99,6 +100,75 @@ public class ScheduleController {
 		}
 		
 	}
+	
+	@PostMapping("/student")
+	@Transactional
+	public void addStudent( @RequestParam("name") String name, @RequestParam("email") String email) { 
+
+//		String student_email = "test@csumb.edu";   // student's email 
+		
+		Student student = studentRepository.findByEmail(email);
+		
+		if(student==null) {
+			student = new Student();
+			student.setEmail(email);
+			student.setName(name);
+			studentRepository.save(student);
+
+		} else {
+			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "Student already in the database!");
+		}
+		
+	}
+		
+	
+	@PutMapping("/student/hold")
+	public void placeHold( @RequestParam("email") String email) {
+		
+		 
+		//String student_name = "david";
+//		enrollment_id = 8;
+		 int id;
+		
+		 Student student = studentRepository.findByEmail(email);
+			
+			if(student!=null) {
+				student.setStatusCode(1);
+				student.setStatus("Student has a hold");
+				studentRepository.save(student);
+				System.out.print("Student has a hold");
+				//return student;
+
+		}else {
+			// something is not right with the student.  
+			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "No student with email "+student.getEmail());
+		}
+	}
+	@PutMapping("/student/remove_hold")
+	public void removeHold( @RequestParam("email") String email) {
+		
+		 
+		//String student_name = "david";
+//		enrollment_id = 8;
+		 int id;
+		
+		 Student student = studentRepository.findByEmail(email);
+			
+			if(student!=null) {
+				student.setStatusCode(0);
+				student.setStatus("Student"+student.getEmail()+ "with hold has been released");
+				studentRepository.save(student);
+				System.out.print("Student has a hold");
+				//return student;
+
+		}else {
+			// something is not right with the student.  
+			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "No student with email "+student.getEmail());
+		}
+	}
+
+	
+
 	
 	@DeleteMapping("/schedule/{enrollment_id}")
 	@Transactional
@@ -118,6 +188,15 @@ public class ScheduleController {
 			// something is not right with the enrollment.  
 			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "Enrollment_id invalid. "+enrollment_id);
 		}
+	}
+	/*@Test
+	public void addStudentTest() throws Exception{
+		Student testStudent = new Student();
+		testStudent.setName("Frank Johnson");
+		testStudent.setEmail("fjohnson@csumb.edu");
+		
+	
+		
 	}
 	
 	/* 
@@ -157,5 +236,7 @@ public class ScheduleController {
 		courseDTO.grade = e.getCourseGrade();
 		return courseDTO;
 	}
+	
+	
 	
 }

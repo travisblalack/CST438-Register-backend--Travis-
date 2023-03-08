@@ -4,6 +4,10 @@ import java.util.List;
 
 public class ScheduleDTO {
 
+	public class EnrollmentDTO {
+
+	}
+
 	public static class CourseDTO {
 
 		public int id;
