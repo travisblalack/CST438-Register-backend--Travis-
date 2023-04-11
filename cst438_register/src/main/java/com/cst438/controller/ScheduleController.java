@@ -102,8 +102,9 @@ public class ScheduleController {
 	}
 	
 	@PostMapping("/student")
+	@CrossOrigin(origins = {"http://localhost:3000", "https://registerf-cst438.herokuapp.com/"})
 	@Transactional
-	public void addStudent( @RequestParam("name") String name, @RequestParam("email") String email) { 
+	public boolean addStudent( @RequestParam("name") String name, @RequestParam("email") String email) { 
 
 //		String student_email = "test@csumb.edu";   // student's email 
 		
@@ -113,17 +114,20 @@ public class ScheduleController {
 			student = new Student();
 			student.setEmail(email);
 			student.setName(name);
-			studentRepository.save(student);
+			//studentRepository.save(student);
+			Student savedStudent = studentRepository.save(student);
+			
+			return true;
 
 		} else {
 			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "Student already in the database!");
 		}
-		
+		//return null;
 	}
 		
 	
 	@PutMapping("/student/hold")
-	public void placeHold( @RequestParam("email") String email) {
+	public boolean placeHold( @RequestParam("email") String email) {
 		
 		 
 		//String student_name = "david";
@@ -137,7 +141,7 @@ public class ScheduleController {
 				student.setStatus("Student has a hold");
 				studentRepository.save(student);
 				System.out.print("Student has a hold");
-				//return student;
+				return true;
 
 		}else {
 			// something is not right with the student.  
@@ -145,7 +149,7 @@ public class ScheduleController {
 		}
 	}
 	@PutMapping("/student/remove_hold")
-	public void removeHold( @RequestParam("email") String email) {
+	public boolean removeHold( @RequestParam("email") String email) {
 		
 		 
 		//String student_name = "david";
@@ -159,7 +163,7 @@ public class ScheduleController {
 				student.setStatus("Student"+student.getEmail()+ "with hold has been released");
 				studentRepository.save(student);
 				System.out.print("Student has a hold");
-				//return student;
+				return true;
 
 		}else {
 			// something is not right with the student.  

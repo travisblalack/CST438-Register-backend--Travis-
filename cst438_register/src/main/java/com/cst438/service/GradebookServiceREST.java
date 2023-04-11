@@ -20,7 +20,14 @@ public class GradebookServiceREST extends GradebookService {
 	@Override
 	public void enrollStudent(String student_email, String student_name, int course_id) {
 		
-		//TODO  complete this method in homework 4
+		EnrollmentDTO e = new EnrollmentDTO();
+		e.course_id=course_id;
+		e.studentEmail=student_email;
+		e.studentName=student_email;
+		
+		System.out.println("Post to gradebook"+e);
+		EnrollmentDTO res = restTemplate.postForObject(gradebook_url+"/enrollment",e,EnrollmentDTO.class);
+		System.out.println("Response from gradebook"+res);
 		
 	}
 
