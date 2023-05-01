@@ -20,6 +20,8 @@ import com.cst438.domain.Course;
 import com.cst438.domain.CourseRepository;
 import com.cst438.domain.Enrollment;
 import com.cst438.domain.EnrollmentRepository;
+import com.cst438.domain.StudentRepository;
+import com.cst438.domain.Student;
 
 /*
  * This example shows how to use selenium testing using the web driver 
@@ -37,49 +39,38 @@ import com.cst438.domain.EnrollmentRepository;
  */
 
 @SpringBootTest
-public class EndToEndScheduleTest {
-
-	public static final String FIREFOX_DRIVER_FILE_LOCATION = "/Users/travisblalack/gecko/geckodriver";
-
+public class E2E {
+	public static final String CHROME_DRIVER_FILE_LOCATION = "/Users/travisblalack/chromedriver_mac64/chromedriver";
 	public static final String URL = "http://localhost:3000";
-
-	public static final String TEST_USER_EMAIL = "test@csumb.edu";
-
-	public static final int TEST_COURSE_ID = 40443; 
-
-	public static final String TEST_SEMESTER = "2021 Fall";
-
+	public static final String TEST_STUDENT_EMAIL = "fjones@csumb.edu";
+	public static final String TEST_NAME = "Freddie";
+	public static final int TEST_COURSE_ID=1234;
 	public static final int SLEEP_DURATION = 1000; // 1 second.
-
 	/*
 	 * When running in @SpringBootTest environment, database repositories can be used
 	 * with the actual database.
 	 */
 	
 	@Autowired
-	EnrollmentRepository enrollmentRepository;
-
+	StudentRepository studentRepository;
 	@Autowired
 	CourseRepository courseRepository;
-
 	/*
 	 * Student add course TEST_COURSE_ID to schedule for 2021 Fall semester.
 	 */
 	
 	@Test
 	public void addCourseTest() throws Exception {
-
 		/*
 		 * if student is already enrolled, then delete the enrollment.
 		 */
 		
-		Enrollment x = null;
+		Student x = null;
 		do {
-			x = enrollmentRepository.findByEmailAndCourseId(TEST_USER_EMAIL, TEST_COURSE_ID);
+			x = studentRepository.findByEmail(TEST_STUDENT_EMAIL);
 			if (x != null)
-				enrollmentRepository.delete(x);
+				studentRepository.delete(x);
 		} while (x != null);
-
 		// set the driver location and start driver
 		//@formatter:off
 		// browser	property name 				Java Driver Class
@@ -87,73 +78,41 @@ public class EndToEndScheduleTest {
 		// FireFox 	webdriver.firefox.driver 	FirefoxDriver
 		// IE 		webdriver.ie.driver 		InternetExplorerDriver
 		//@formatter:on
-
-		System.setProperty("webdriver.firefox.driver", FIREFOX_DRIVER_FILE_LOCATION);
-		WebDriver driver = new FirefoxDriver();
+		System.setProperty("webdriver.chrome.driver", CHROME_DRIVER_FILE_LOCATION);
+		WebDriver driver = new ChromeDriver();
 		// Puts an Implicit wait for 10 seconds before throwing exception
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-
+		driver.manage().timeouts().implicitlyWait(6, TimeUnit.SECONDS);
 		try {
-
 			driver.get(URL);
-			Thread.sleep(SLEEP_DURATION);
-
-			// select the last of the radio buttons on the list of semesters page.
+			List<WebElement> elements  = driver.findElements(By.xpath("//a"));
+			elements.get(1).click();
+			WebElement we = driver.findElement(By.id("id"));
 			
-			WebElement we = driver.findElement(By.xpath("(//input[@type='radio'])[last()]"));
 			we.click();
-
-			// Locate and click "Get Schedule" button
-			
-			
-			driver.findElement(By.xpath("//a")).click();
-			Thread.sleep(SLEEP_DURATION);
-
-			// Locate and click "Add Course" button which is the first and only button on the page.
-			driver.findElement(By.xpath("//button")).click();
-			Thread.sleep(SLEEP_DURATION);
-
-			// enter course no and click Add button
-			
-			driver.findElement(By.xpath("//input[@name='course_id']")).sendKeys(Integer.toString(TEST_COURSE_ID));
-			driver.findElement(By.xpath("//button[@id='Add']")).click();
-			Thread.sleep(SLEEP_DURATION);
-
+			driver.findElement(By.id("1234")).sendKeys("Freddie");
+			driver.findElement(By.id("4321")).sendKeys("fjones@csumb.edu");
+			WebElement add = driver.findElement(By.id("Add"));
+			add.click();
+			boolean found = false;
+				
+		
 			/*
 			* verify that new course shows in schedule.
 			* get the title of all courses listed in schedule
 			*/ 
-		
-			Course course = courseRepository.findById(TEST_COURSE_ID).get();
-			
-			List<WebElement> elements  = driver.findElements(By.xpath("//div[@data-field='title']/div[@class='MuiDataGrid-cellContent']"));
-			boolean found = false;
-			for (WebElement e : elements) {
-				System.out.println(e.getText()); // for debug
-				if (e.getText().equals(course.getTitle())) {
-					found=true;
-					break;
-				}
-			}
-			assertTrue( found, "Course added but not listed in schedule.");
-			
 			// verify that enrollment row has been inserted to database.
 			
-			Enrollment e = enrollmentRepository.findByEmailAndCourseId(TEST_USER_EMAIL, TEST_COURSE_ID);
-			assertNotNull(e, "Course enrollment not found in database.");
-
+			Student s = studentRepository.findByEmail(TEST_STUDENT_EMAIL);
+			assertNotNull(s, "Student not found in database.");
 		} catch (Exception ex) {
 			throw ex;
 		} finally {
-
 			// clean up database.
 			
-			Enrollment e = enrollmentRepository.findByEmailAndCourseId(TEST_USER_EMAIL, TEST_COURSE_ID);
-			if (e != null)
-				enrollmentRepository.delete(e);
-
+			Student s = studentRepository.findByEmail(TEST_STUDENT_EMAIL);
+			if (s!= null)
+				studentRepository.delete(s);
 			driver.quit();
 		}
-
 	}
 }
